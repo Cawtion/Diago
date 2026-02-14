@@ -16,38 +16,14 @@ DISABLED BY DEFAULT. Requires API keys to function.
 """
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from core.config import get_settings
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-AGENT_ENABLED = False
-
-# LLM backend: "openai", "anthropic", "ollama", or None
-AGENT_LLM_PROVIDER = os.environ.get("MECHANIC_LLM_PROVIDER", None)
-
-AGENT_LLM_CONFIG = {
-    "openai": {
-        "model": os.environ.get("MECHANIC_OPENAI_MODEL", "gpt-4o"),
-        "api_key": os.environ.get("OPENAI_API_KEY", ""),
-    },
-    "anthropic": {
-        "model": os.environ.get(
-            "MECHANIC_ANTHROPIC_MODEL", "claude-sonnet-4-20250514"
-        ),
-        "api_key": os.environ.get("ANTHROPIC_API_KEY", ""),
-    },
-    "ollama": {
-        "model": os.environ.get("MECHANIC_OLLAMA_MODEL", "llama3.1"),
-        "base_url": os.environ.get(
-            "MECHANIC_OLLAMA_URL", "http://localhost:11434"
-        ),
-    },
-}
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -254,7 +230,8 @@ class MechanicAgent:
         diagnosis_result: Any = None,
     ):
         self.db_manager = db_manager
-        self.llm_provider = llm_provider or AGENT_LLM_PROVIDER
+        settings = get_settings().agent
+        self.llm_provider = llm_provider or settings.agent_llm_provider
         self.memory = ConversationMemory()
         self._diagnosis_result = diagnosis_result
         self._knowledge_base = None  # Lazy-loaded
@@ -267,9 +244,11 @@ class MechanicAgent:
         """Check if the agent has a configured LLM backend."""
         if not self.llm_provider:
             return False
-        config = AGENT_LLM_CONFIG.get(self.llm_provider, {})
-        if self.llm_provider in ("openai", "anthropic"):
-            return bool(config.get("api_key"))
+        settings = get_settings()
+        if self.llm_provider == "openai":
+            return bool(settings.llm.openai_api_key)
+        if self.llm_provider == "anthropic":
+            return bool(settings.llm.anthropic_api_key)
         if self.llm_provider == "ollama":
             return True  # Assume local Ollama is available
         return False
@@ -512,16 +491,15 @@ class MechanicAgent:
         except ImportError:
             return {"content": "[OpenAI package not installed. Run: pip install openai]"}
 
-        config = AGENT_LLM_CONFIG["openai"]
-        api_key = config["api_key"] or os.environ.get("OPENAI_API_KEY", "")
-
+        settings = get_settings()
+        api_key = settings.llm.openai_api_key
         if not api_key:
             return {"content": "[Set OPENAI_API_KEY environment variable]"}
 
         client = openai.OpenAI(api_key=api_key)
 
         kwargs = {
-            "model": config["model"],
+            "model": settings.agent.mechanic_openai_model,
             "messages": messages,
             "temperature": 0.4,
             "max_tokens": 1500,
@@ -556,9 +534,8 @@ class MechanicAgent:
         except ImportError:
             return {"content": "[Anthropic package not installed. Run: pip install anthropic]"}
 
-        config = AGENT_LLM_CONFIG["anthropic"]
-        api_key = config["api_key"] or os.environ.get("ANTHROPIC_API_KEY", "")
-
+        settings = get_settings()
+        api_key = settings.llm.anthropic_api_key
         if not api_key:
             return {"content": "[Set ANTHROPIC_API_KEY environment variable]"}
 
@@ -574,7 +551,7 @@ class MechanicAgent:
                 api_messages.append(m)
 
         kwargs = {
-            "model": config["model"],
+            "model": settings.agent.mechanic_anthropic_model,
             "max_tokens": 1500,
             "system": system_msg,
             "messages": api_messages,
@@ -618,11 +595,11 @@ class MechanicAgent:
         import urllib.request
         import urllib.error
 
-        config = AGENT_LLM_CONFIG["ollama"]
-        url = f"{config['base_url']}/api/chat"
+        settings = get_settings().agent
+        url = f"{settings.mechanic_ollama_url}/api/chat"
 
         payload = {
-            "model": config["model"],
+            "model": settings.mechanic_ollama_model,
             "messages": messages,
             "stream": False,
             "options": {"temperature": 0.4},

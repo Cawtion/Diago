@@ -7,7 +7,10 @@ Works with the trouble_code_definitions table populated from
 database/obd2_codes.json (SAE J2012 pre-2002 + common generic codes).
 """
 
+import logging
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -94,30 +97,35 @@ def suggest_codes_for_symptoms(
     if not symptom_keywords:
         return []
 
-    # Build OR conditions for each keyword
-    conditions = []
-    params = []
-    for kw in symptom_keywords:
-        kw_clean = kw.strip().lower()
-        if kw_clean:
-            conditions.append("LOWER(symptoms) LIKE ?")
-            params.append(f"%{kw_clean}%")
-
-    if not conditions:
+    # Clean keywords, filter out empty strings
+    clean_keywords = [kw.strip().lower() for kw in symptom_keywords if kw.strip()]
+    if not clean_keywords:
         return []
 
-    # Count how many keywords match each code (relevance ranking)
-    # We use a UNION approach for simplicity
-    where_clause = " OR ".join(conditions)
+    # Build WHERE clause (OR conditions)
+    where_conditions = ["LOWER(symptoms) LIKE ?" for _ in clean_keywords]
+    where_params = [f"%{kw}%" for kw in clean_keywords]
+
+    # Build relevance CASE expressions (count matching keywords)
+    case_expressions = [
+        "(CASE WHEN LOWER(symptoms) LIKE ? THEN 1 ELSE 0 END)"
+        for _ in clean_keywords
+    ]
+    case_params = [f"%{kw}%" for kw in clean_keywords]
+
+    where_clause = " OR ".join(where_conditions)
+    relevance_expr = " + ".join(case_expressions)
+
+    # Parameters: first the CASE params, then the WHERE params, then LIMIT
+    all_params = case_params + where_params + [limit]
+
     cursor = db_manager.connection.execute(
-        f"""SELECT *, (
-                {' + '.join(f"(CASE WHEN LOWER(symptoms) LIKE ? THEN 1 ELSE 0 END)" for _ in symptom_keywords)}
-            ) as relevance
+        f"""SELECT *, ({relevance_expr}) as relevance
             FROM trouble_code_definitions
             WHERE {where_clause}
             ORDER BY relevance DESC, severity DESC
             LIMIT ?""",
-        [f"%{kw.strip().lower()}%" for kw in symptom_keywords] + params + [limit],
+        all_params,
     )
     return [_row_to_definition(row) for row in cursor.fetchall()]
 

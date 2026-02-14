@@ -21,39 +21,17 @@ Supported backends (pluggable):
 """
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 
+from core.config import get_settings
 from core.feature_extraction import AudioFeatures
 from core.diagnostic_engine import (
     MECHANICAL_CLASSES, CLASS_DISPLAY_NAMES, CLASS_DESCRIPTIONS,
 )
 
-
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-LLM_ENABLED = False  # Set to True to enable LLM reasoning
-
-# Provider: "openai", "anthropic", "ollama", or None
-LLM_PROVIDER = None
-
-# Provider-specific settings
-LLM_CONFIG = {
-    "openai": {
-        "model": "gpt-4o-mini",
-        "api_key": "",  # Set via environment variable OPENAI_API_KEY
-    },
-    "anthropic": {
-        "model": "claude-sonnet-4-20250514",
-        "api_key": "",  # Set via environment variable ANTHROPIC_API_KEY
-    },
-    "ollama": {
-        "model": "llama3.1",
-        "base_url": "http://localhost:11434",
-    },
-}
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +153,8 @@ def run_llm_reasoning(
     Returns:
         LLM narrative string, or None if disabled/failed.
     """
-    if not LLM_ENABLED or LLM_PROVIDER is None:
+    settings = get_settings().llm
+    if not settings.llm_enabled or settings.llm_provider is None:
         return None
 
     prompt_data = build_structured_prompt(
@@ -186,35 +165,34 @@ def run_llm_reasoning(
     prompt_text = format_prompt_as_text(prompt_data)
 
     try:
-        if LLM_PROVIDER == "openai":
+        if settings.llm_provider == "openai":
             return _call_openai(prompt_text)
-        elif LLM_PROVIDER == "anthropic":
+        elif settings.llm_provider == "anthropic":
             return _call_anthropic(prompt_text)
-        elif LLM_PROVIDER == "ollama":
+        elif settings.llm_provider == "ollama":
             return _call_ollama(prompt_text)
         else:
             return None
     except Exception as e:
+        logger.error("LLM reasoning failed: %s", e, exc_info=True)
         return f"[LLM error: {e}]"
 
 
 def _call_openai(prompt: str) -> str | None:
     """Call OpenAI API."""
-    import os
     try:
         import openai
     except ImportError:
         return "[OpenAI package not installed. Run: pip install openai]"
 
-    config = LLM_CONFIG["openai"]
-    api_key = config["api_key"] or os.environ.get("OPENAI_API_KEY", "")
-
+    settings = get_settings().llm
+    api_key = settings.openai_api_key
     if not api_key:
         return "[OpenAI API key not set. Set OPENAI_API_KEY environment variable.]"
 
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
-        model=config["model"],
+        model=settings.openai_model,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         max_tokens=1000,
@@ -225,21 +203,19 @@ def _call_openai(prompt: str) -> str | None:
 
 def _call_anthropic(prompt: str) -> str | None:
     """Call Anthropic API."""
-    import os
     try:
         import anthropic
     except ImportError:
         return "[Anthropic package not installed. Run: pip install anthropic]"
 
-    config = LLM_CONFIG["anthropic"]
-    api_key = config["api_key"] or os.environ.get("ANTHROPIC_API_KEY", "")
-
+    settings = get_settings().llm
+    api_key = settings.anthropic_api_key
     if not api_key:
         return "[Anthropic API key not set. Set ANTHROPIC_API_KEY environment variable.]"
 
     client = anthropic.Anthropic(api_key=api_key)
     response = client.messages.create(
-        model=config["model"],
+        model=settings.anthropic_model,
         max_tokens=1000,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -252,11 +228,11 @@ def _call_ollama(prompt: str) -> str | None:
     import urllib.request
     import urllib.error
 
-    config = LLM_CONFIG["ollama"]
-    url = f"{config['base_url']}/api/generate"
+    settings = get_settings().llm
+    url = f"{settings.ollama_url}/api/generate"
 
     payload = json.dumps({
-        "model": config["model"],
+        "model": settings.ollama_model,
         "prompt": prompt,
         "stream": False,
         "options": {"temperature": 0.3},
@@ -273,7 +249,7 @@ def _call_ollama(prompt: str) -> str | None:
             data = json.loads(resp.read().decode("utf-8"))
             return data.get("response", None)
     except urllib.error.URLError:
-        return "[Ollama not reachable. Is it running on localhost:11434?]"
+        return f"[Ollama not reachable. Is it running on {settings.ollama_url}?]"
 
 
 # ---------------------------------------------------------------------------

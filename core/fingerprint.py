@@ -16,11 +16,14 @@ This is inspired by Shazam-style fingerprinting but tuned for:
 """
 
 import hashlib
+import logging
 from dataclasses import dataclass
 
 import numpy as np
 from scipy import signal
 from scipy.ndimage import maximum_filter, minimum_filter
+
+logger = logging.getLogger(__name__)
 
 
 # --- Configuration tuned for automotive audio ---

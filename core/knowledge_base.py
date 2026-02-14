@@ -14,12 +14,15 @@ Knowledge Categories:
 """
 
 import json
+import logging
 import math
 import os
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------

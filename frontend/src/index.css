@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* ─── BEAST.BARZ-style theme: dark purple-blue base, neon pink primary, teal secondary ─── */
+@theme {
+  /* Backgrounds */
+  --color-base: #1a1625;
+  --color-mantle: #15121f;
+  --color-crust: #0f0d14;
+  --color-surface0: #252030;
+  --color-surface1: #2e2938;
+  --color-surface2: #3a3347;
+  /* Text */
+  --color-overlay0: #6b6380;
+  --color-overlay1: #8a8299;
+  --color-text: #f0eef4;
+  --color-subtext: #c4bfcc;
+  /* Accents */
+  --color-primary: #e879f9;
+  --color-secondary: #22d3ee;
+  /* Semantic (tuned to fit purple vibe) */
+  --color-green: #34d399;
+  --color-yellow: #fbbf24;
+  --color-red: #f472b6;
+  --color-purple: #a78bfa;
+  --color-teal: #2dd4bf;
+  /* Legacy/alias for code colors etc. */
+  --color-blue: #a78bfa;
+  --color-peach: #fb923c;
+  --color-pink: #e879f9;
+  --color-sky: #22d3ee;
+  /* Gradients (for use in components) */
+  --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #e879f9 100%);
+  --gradient-secondary: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%);
+}
+
+/* ─── Base Styles ─── */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(
+    ellipse 120% 80% at 50% 0%,
+    rgba(124, 58, 237, 0.08) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse 80% 60% at 80% 80%,
+    rgba(34, 211, 238, 0.05) 0%,
+    transparent 50%
+  ),
+  var(--color-base);
+  color: var(--color-text);
+  font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-mantle);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface2);
+}
+
+/* ─── Selection ─── */
+::selection {
+  background-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+/* ─── Gradient utilities for buttons / progress ─── */
+.bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+.bg-gradient-secondary {
+  background: var(--gradient-secondary);
+}
+.progress-fill-gradient {
+  background: linear-gradient(90deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+}

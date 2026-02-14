@@ -9,8 +9,20 @@ build/
 venv/
 env/
 
+# Environment (secrets)
+.env
+
 # Database (generated at runtime)
 *.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Tauri
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
 
 # IDE
 .vscode/
@@ -28,5 +40,5 @@ audio recordings/
 # Generated reports
 diagnostic_report_*.txt
 
-# Test files
-test_*.py
+# Test coverage
+.coverage

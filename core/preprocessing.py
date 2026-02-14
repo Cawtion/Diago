@@ -8,8 +8,12 @@ Pipeline:
 3. Noise floor reduction via spectral gating
 """
 
+import logging
+
 import numpy as np
 from scipy import signal as sig
+
+logger = logging.getLogger(__name__)
 
 
 def preprocess_audio(

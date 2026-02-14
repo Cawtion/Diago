@@ -56,3 +56,18 @@ CREATE TABLE IF NOT EXISTS trouble_code_definitions (
 -- Index for fast symptom search
 CREATE INDEX IF NOT EXISTS idx_code_system ON trouble_code_definitions(system);
 CREATE INDEX IF NOT EXISTS idx_code_severity ON trouble_code_definitions(severity);
+
+-- Technical Service Bulletins (imported from NHTSA or other sources)
+CREATE TABLE IF NOT EXISTS technical_service_bulletins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    model_year INTEGER NOT NULL,
+    make TEXT NOT NULL,
+    model TEXT NOT NULL,
+    component TEXT,
+    summary TEXT,
+    nhtsa_id TEXT,
+    document_id TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_tsb_vehicle ON technical_service_bulletins(model_year, make, model);
+CREATE INDEX IF NOT EXISTS idx_tsb_component ON technical_service_bulletins(component);

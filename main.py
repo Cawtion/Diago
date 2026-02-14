@@ -1,33 +1,57 @@
 """
-Automotive Audio Spectrogram Analyzer
+Diago -- Automotive Audio Diagnostic Analyzer
 Main application entry point.
 """
 
+import logging
 import sys
 import os
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 
+from core.config import get_settings
 from gui.main_window import MainWindow
 from database.db_manager import DatabaseManager
+
+logger = logging.getLogger(__name__)
+
+
+def _setup_logging() -> None:
+    """Configure application-wide logging."""
+    settings = get_settings()
+    level = logging.DEBUG if settings.debug else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    # Quiet noisy third-party loggers
+    logging.getLogger("matplotlib").setLevel(logging.WARNING)
+    logging.getLogger("PIL").setLevel(logging.WARNING)
 
 
 def main():
     """Initialize and launch the application."""
+    _setup_logging()
+
+    settings = get_settings()
+    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
+
     # High DPI scaling
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Auto Audio Analyzer")
+    app.setApplicationName(settings.app_name)
     app.setOrganizationName("AutoAudioDiagnostics")
 
     # Apply a modern dark stylesheet
     app.setStyleSheet(get_stylesheet())
 
     # Initialize the database (creates tables and seeds data if needed)
-    db_path = os.path.join(os.path.dirname(__file__), "auto_audio.db")
-    db_manager = DatabaseManager(db_path)
+    db_path = settings.db_path
+    logger.info("Database path: %s", db_path)
+    db_manager = DatabaseManager(db_path, settings.obd2_codes_path)
     db_manager.initialize()
 
     # Create and show the main window

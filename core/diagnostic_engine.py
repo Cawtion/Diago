@@ -15,10 +15,13 @@ System Guarantee:
     even if the LLM attempts to favor it.
 """
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from core.preprocessing import preprocess_audio
 from core.feature_extraction import (
@@ -676,8 +679,8 @@ def run_diagnostic_pipeline(
             for cls, boost in code_boosts.items():
                 if cls in raw_scores:
                     raw_scores[cls] += boost
-        except Exception:
-            pass  # Table may not exist yet; gracefully skip
+        except Exception as e:
+            logger.warning("Could not apply trouble code boosts: %s", e)
 
     # Step 5: Apply constraint penalties
     _progress("Applying physics constraints...")
@@ -706,7 +709,8 @@ def run_diagnostic_pipeline(
             llm_narrative = run_llm_reasoning(
                 normalized_scores, features, penalties
             )
-        except Exception:
+        except Exception as e:
+            logger.warning("LLM reasoning failed in audio pipeline: %s", e)
             llm_narrative = None
 
     _progress("Analysis complete.")
@@ -1081,8 +1085,8 @@ def run_text_diagnostic_pipeline(
         try:
             from database.trouble_code_lookup import get_mechanical_class_boosts
             code_boosts = get_mechanical_class_boosts(user_codes, db_manager)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Could not apply trouble code boosts in text pipeline: %s", e)
 
     # Step 5: Signal agreement bonus
     _progress("Computing signal agreement...")
@@ -1148,7 +1152,8 @@ def run_text_diagnostic_pipeline(
             llm_narrative = run_llm_reasoning(
                 normalized_scores, features, penalties
             )
-        except Exception:
+        except Exception as e:
+            logger.warning("LLM reasoning failed in text pipeline: %s", e)
             llm_narrative = None
 
     _progress("Diagnosis complete.")

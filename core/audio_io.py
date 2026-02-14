@@ -4,11 +4,16 @@ Handles microphone recording and audio file loading/saving.
 All audio is internally represented as mono float32 numpy arrays at 44100 Hz.
 """
 
+import logging
+
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from pathlib import Path
 
+from core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 # Standard sample rate for all internal processing
 STANDARD_SR = 44100

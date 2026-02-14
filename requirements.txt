@@ -1,3 +1,4 @@
+# Core dependencies
 PyQt6
 numpy
 scipy
@@ -6,3 +7,26 @@ sounddevice
 soundfile
 pydub
 audioop-lts
+
+# Configuration
+pydantic-settings
+python-dotenv
+
+# API
+fastapi[standard]
+python-multipart
+httpx
+
+# Auth & Payments
+PyJWT
+cryptography
+stripe
+
+# Testing
+pytest
+pytest-cov
+
+# Optional: LLM providers (uncomment as needed)
+# openai
+# anthropic
+# tavily-python

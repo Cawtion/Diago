@@ -16,9 +16,12 @@ Architecture:
 This module requires NO external dependencies (no LLM, no ML).
 """
 
+import logging
 import re
 from dataclasses import dataclass, field
 from core.feature_extraction import BehavioralContext
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------

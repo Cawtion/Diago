@@ -12,11 +12,14 @@ The matching algorithm:
 6. Return ranked results above the confidence threshold
 """
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass
 
 from core.fingerprint import Fingerprint
 from database.db_manager import DatabaseManager, MatchResult
+
+logger = logging.getLogger(__name__)
 
 
 # Minimum confidence threshold (percentage) to report a match

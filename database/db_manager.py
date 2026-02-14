@@ -4,12 +4,15 @@ SQLite database operations for fault signatures, analysis sessions,
 and fingerprint hash storage.
 """
 
+import logging
 import sqlite3
 import os
 import threading
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -48,8 +51,9 @@ class MatchResult:
 class DatabaseManager:
     """Manages all SQLite database operations (thread-safe)."""
 
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, obd2_codes_path: str | None = None):
         self.db_path = db_path
+        self._obd2_codes_path = obd2_codes_path
         self._local = threading.local()
         self._all_connections: list[sqlite3.Connection] = []
         self._lock = threading.Lock()
@@ -73,16 +77,19 @@ class DatabaseManager:
             for conn in self._all_connections:
                 try:
                     conn.close()
-                except Exception:
-                    pass
+                except sqlite3.Error as e:
+                    logger.warning("Error closing database connection: %s", e)
             self._all_connections.clear()
         self._local = threading.local()
+        logger.debug("All database connections closed")
 
     def initialize(self):
         """Create tables and seed data if needed."""
+        logger.info("Initializing database at %s", self.db_path)
         self._create_tables()
         self._seed_if_empty()
         self._seed_trouble_codes_if_empty()
+        logger.info("Database initialization complete")
 
     def _create_tables(self):
         """Create all database tables from the schema."""
@@ -159,16 +166,20 @@ class DatabaseManager:
                 "SELECT COUNT(*) FROM trouble_code_definitions"
             )
             count = cursor.fetchone()[0]
-        except Exception:
-            # Table might not exist yet if schema failed
+        except sqlite3.OperationalError as e:
+            logger.warning("trouble_code_definitions table not found: %s", e)
             return
 
         if count > 0:
             return
 
         import json
-        json_path = Path(__file__).parent / "obd2_codes.json"
+        if self._obd2_codes_path and Path(self._obd2_codes_path).exists():
+            json_path = Path(self._obd2_codes_path)
+        else:
+            json_path = Path(__file__).parent / "obd2_codes.json"
         if not json_path.exists():
+            logger.warning("OBD2 codes file not found at %s", json_path)
             return
 
         try:
@@ -446,3 +457,68 @@ class DatabaseManager:
             "SELECT COUNT(*) FROM signature_hashes"
         )
         return cursor.fetchone()[0]
+
+    # ---- Technical Service Bulletins ----
+
+    def insert_tsb(
+        self,
+        model_year: int,
+        make: str,
+        model: str,
+        component: str = "",
+        summary: str = "",
+        nhtsa_id: str = "",
+        document_id: str = "",
+    ) -> int:
+        """Insert a single TSB record. Returns row id."""
+        cursor = self.connection.execute(
+            """INSERT INTO technical_service_bulletins
+               (model_year, make, model, component, summary, nhtsa_id, document_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (model_year, make.strip(), model.strip(), component.strip(), summary.strip(), nhtsa_id.strip(), document_id.strip()),
+        )
+        self.connection.commit()
+        return cursor.lastrowid
+
+    def search_tsbs(
+        self,
+        model_year: int | None = None,
+        make: str | None = None,
+        model: str | None = None,
+        component: str | None = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """Search TSBs by vehicle and optional component. Returns list of dicts."""
+        conditions = []
+        params = []
+        if model_year is not None:
+            conditions.append("model_year = ?")
+            params.append(model_year)
+        if make:
+            conditions.append("LOWER(make) LIKE LOWER(?)")
+            params.append(f"%{make.strip()}%")
+        if model:
+            conditions.append("LOWER(model) LIKE LOWER(?)")
+            params.append(f"%{model.strip()}%")
+        if component:
+            conditions.append("LOWER(component) LIKE LOWER(?)")
+            params.append(f"%{component.strip()}%")
+
+        where = " AND ".join(conditions) if conditions else "1=1"
+        params.append(limit)
+        cursor = self.connection.execute(
+            f"""SELECT id, model_year, make, model, component, summary, nhtsa_id, document_id, created_at
+                FROM technical_service_bulletins WHERE {where} ORDER BY model_year DESC, make, model LIMIT ?""",
+            params,
+        )
+        rows = cursor.fetchall()
+        keys = [c[0] for c in cursor.description]
+        return [dict(zip(keys, row)) for row in rows]
+
+    def get_tsb_count(self) -> int:
+        """Return total number of TSB records."""
+        try:
+            cursor = self.connection.execute("SELECT COUNT(*) FROM technical_service_bulletins")
+            return cursor.fetchone()[0]
+        except sqlite3.OperationalError:
+            return 0

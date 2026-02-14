@@ -33,10 +33,13 @@ Behavioral context (user-provided via GUI):
   intermittent, issue duration, vehicle type, mileage, maintenance
 """
 
+import logging
 from dataclasses import dataclass, field, asdict
 
 import numpy as np
 from scipy import signal as sig
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------

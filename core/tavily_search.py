@@ -7,8 +7,12 @@ Requires: TAVILY_API_KEY environment variable set.
 Install: pip install tavily-python
 """
 
-import os
+import logging
 from dataclasses import dataclass
+
+from core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -20,16 +24,9 @@ class SearchResult:
     score: float = 0.0
 
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
-
-
 def is_available() -> bool:
     """Check if Tavily search is configured."""
-    return bool(TAVILY_API_KEY)
+    return bool(get_settings().search.tavily_api_key)
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +53,8 @@ def search_automotive(
     Returns:
         List of SearchResult objects.
     """
-    if not TAVILY_API_KEY:
+    api_key = get_settings().search.tavily_api_key
+    if not api_key:
         return [SearchResult(
             title="Tavily API Key Not Set",
             url="",
@@ -130,7 +128,8 @@ def _search_with_tavily(query: str, max_results: int) -> list[SearchResult]:
     """Use the official Tavily Python client."""
     from tavily import TavilyClient
 
-    client = TavilyClient(api_key=TAVILY_API_KEY)
+    api_key = get_settings().search.tavily_api_key
+    client = TavilyClient(api_key=api_key)
 
     response = client.search(
         query=query,
@@ -166,8 +165,9 @@ def _search_with_urllib(query: str, max_results: int) -> list[SearchResult]:
     import urllib.error
 
     url = "https://api.tavily.com/search"
+    api_key = get_settings().search.tavily_api_key
     payload = json.dumps({
-        "api_key": TAVILY_API_KEY,
+        "api_key": api_key,
         "query": query,
         "search_depth": "basic",
         "max_results": max_results,
