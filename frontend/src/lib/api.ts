@@ -318,6 +318,20 @@ export async function saveSelectedVehicle(payload: {
   });
 }
 
+/** charm.li (Operation CHARM) service manual URL for the current or given vehicle (1982–2013). */
+export async function getManualUrl(params?: {
+  make?: string;
+  model_year?: number;
+}): Promise<{ url: string | null; make: string; model_year: number | null; message: string }> {
+  const search = new URLSearchParams();
+  if (params?.make) search.set("make", params.make);
+  if (params?.model_year != null) search.set("model_year", String(params.model_year));
+  const q = search.toString();
+  return request<{ url: string | null; make: string; model_year: number | null; message: string }>(
+    `${BASE}/vehicle/manual-url${q ? `?${q}` : ""}`
+  );
+}
+
 /* ─── TSBs ─── */
 export async function searchTsbs(params: {
   model_year?: number;

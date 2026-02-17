@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Activity, Car, History } from "lucide-react";
+import { Activity, Car, History, Stethoscope } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -104,14 +104,12 @@ export function HomePage() {
         <Header />
         <main className="flex-1 overflow-y-auto flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-2xl space-y-8">
-            <section className="text-center space-y-3">
-              <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-primary/10 mb-2">
-                <Activity size={40} className="text-primary" />
+            <section className="text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
+                <Activity size={28} className="text-primary" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-text">Diago</h1>
-              <p className="text-subtext text-sm sm:text-base">
-                Physics-aware automotive diagnostics
-              </p>
+              <h1 className="hero-headline text-text">Diago</h1>
+              <p className="hero-sub">Choose how you’ll use diagnostics</p>
             </section>
             <PersonaSelector />
           </div>
@@ -127,28 +125,35 @@ export function HomePage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12 space-y-8">
           {/* Hero */}
-          <section className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-primary/10 mb-2">
-              <Activity size={40} className="text-primary" />
+          <section className="text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10">
+              <Activity size={28} className="text-primary" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-text">
-              Diago
+            <h1 className="hero-headline text-text">
+              Diagnose with confidence
             </h1>
-            <p className="text-subtext text-sm sm:text-base">
-              Physics-aware automotive diagnostics
-            </p>
-            <p className="text-overlay0 text-xs sm:text-sm max-w-md mx-auto">
-              Record or describe symptoms, add OBD-II codes, decode your VIN, and get match results.
+            <p className="hero-sub max-w-sm mx-auto">
+              Describe symptoms, add codes or record sound. Get physics-aware results and repair guidance.
             </p>
           </section>
 
-          {/* Vehicle (year / make / model / trim) + Start diagnosis */}
+          {/* Single primary CTA */}
           <section className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-surface0/60 border border-surface1">
-              <p className="text-xs text-subtext sm:col-span-2">
-                Vehicle (optional — speeds up recalls & TSBs)
-              </p>
-              <Select
+            <Button
+              variant="primary"
+              size="xl"
+              className="w-full max-w-sm mx-auto flex justify-center"
+              onClick={onStartDiagnosis}
+            >
+              <Stethoscope size={20} />
+              Start diagnosis
+            </Button>
+            <details className="group max-w-xl mx-auto">
+              <summary className="text-sm text-subtext cursor-pointer list-none py-2 text-center hover:text-text transition-colors">
+                Add vehicle (optional)
+              </summary>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-mantle/80 border border-surface1/60">
+                <Select
                 label="Year"
                 options={yearOptions}
                 value={year}
@@ -184,32 +189,24 @@ export function HomePage() {
                 />
               </div>
             </div>
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={onStartDiagnosis}
-            >
-              Next
-            </Button>
-            <Button
-              variant="default"
-              size="lg"
-              className="w-full"
-              onClick={() =>
-                navigate("/diagnose", { state: { focus: "vehicle" } })
-              }
-            >
-              <Car size={18} />
-              Decode VIN & recalls
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full mt-2 text-subtext"
+                onClick={() => navigate("/diagnose", { state: { focus: "vehicle" } })}
+              >
+                <Car size={14} />
+                Decode VIN & recalls on diagnose page
+              </Button>
+            </details>
           </section>
 
-          {/* Recent sessions */}
+          {/* Recent sessions – lighter */}
           <SectionCard
+            variant="compact"
             title={
-              <span className="flex items-center gap-2">
-                <History size={16} className="text-primary" />
+              <span className="flex items-center gap-2 text-subtext">
+                <History size={14} />
                 Recent sessions
               </span>
             }

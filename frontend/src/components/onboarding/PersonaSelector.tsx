@@ -74,8 +74,8 @@ export function PersonaSelector({ onSelect, compact = false }: PersonaSelectorPr
             type="button"
             onClick={() => handleSelect(id)}
             className={cn(
-              "flex flex-col items-start gap-3 p-5 rounded-xl border-2 border-surface1",
-              "bg-surface0/60 hover:bg-surface0 hover:border-primary/50",
+              "flex flex-col items-start gap-3 p-5 rounded-xl border border-surface1/80",
+              "bg-mantle/80 hover:bg-mantle hover:border-primary/40",
               "text-left transition-all duration-150",
               "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             )}
