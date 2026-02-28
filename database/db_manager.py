@@ -92,9 +92,11 @@ class DatabaseManager:
         self._ensure_diagnosis_usage_table()
         self._ensure_stripe_subscription_user_table()
         self._run_enterprise_migrations()
+        self._ensure_jobs_thread_id_column()
         self._seed_if_empty()
         self._seed_trouble_codes_if_empty()
         self._seed_failure_modes_if_empty()
+        self._seed_mechanics_if_empty()
         logger.info("Database initialization complete")
 
     def _create_tables(self):
@@ -197,6 +199,18 @@ class DatabaseManager:
             (model_year, make, model, submodel),
         )
         self.connection.commit()
+
+    def _ensure_jobs_thread_id_column(self):
+        """Add thread_id to jobs table if missing (for mechanic respond resume)."""
+        try:
+            cursor = self.connection.execute("PRAGMA table_info(jobs)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "thread_id" not in columns:
+                self.connection.execute("ALTER TABLE jobs ADD COLUMN thread_id TEXT")
+                self.connection.commit()
+                logger.debug("Added thread_id column to jobs table")
+        except sqlite3.OperationalError as e:
+            logger.warning("Could not add thread_id to jobs: %s", e)
 
     def _run_enterprise_migrations(self):
         """Run enterprise migrations (repair_logs, etc.)."""
@@ -318,6 +332,44 @@ class DatabaseManager:
         )
         self.connection.commit()
 
+    def create_parts_order(
+        self,
+        part_description: str,
+        retailer: str,
+        retailer_store_id: str,
+        amount_cents: int,
+        payment_intent_id: str,
+        user_id: str | None = None,
+    ) -> int:
+        """Create a parts order (pending_payment). Returns order id."""
+        cursor = self.connection.execute(
+            """INSERT INTO parts_orders (user_id, part_description, retailer, retailer_store_id, status, payment_intent_id, amount_cents)
+               VALUES (?, ?, ?, ?, 'pending_payment', ?, ?)""",
+            (user_id, part_description, retailer, retailer_store_id, payment_intent_id, amount_cents),
+        )
+        self.connection.commit()
+        return cursor.lastrowid
+
+    def update_parts_order_paid(self, payment_intent_id: str) -> bool:
+        """Mark parts order as paid by payment_intent_id. Returns True if updated."""
+        cursor = self.connection.execute(
+            "UPDATE parts_orders SET status = 'paid', updated_at = CURRENT_TIMESTAMP WHERE payment_intent_id = ? AND status = 'pending_payment'",
+            (payment_intent_id,),
+        )
+        self.connection.commit()
+        return cursor.rowcount > 0
+
+    def get_parts_order_by_payment_intent(self, payment_intent_id: str) -> dict | None:
+        """Return parts order by payment_intent_id or None."""
+        cursor = self.connection.execute(
+            "SELECT id, status, part_description, retailer FROM parts_orders WHERE payment_intent_id = ?",
+            (payment_intent_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return dict(row)
+
     def _seed_failure_modes_if_empty(self):
         """Seed failure_modes if the table is empty."""
         try:
@@ -350,6 +402,83 @@ class DatabaseManager:
                 ),
             )
         self.connection.commit()
+
+    def _seed_mechanics_if_empty(self):
+        """Seed mechanics table with mock mobile mechanics for dispatch (Phase 1)."""
+        try:
+            cursor = self.connection.execute("SELECT COUNT(*) FROM mechanics")
+            count = cursor.fetchone()[0]
+        except sqlite3.OperationalError:
+            return
+        if count > 0:
+            return
+        mock_mechanics = [
+            ("Mike's Mobile Auto", 34.05, -118.25, "available", "+1-555-0101", "brakes,suspension"),
+            ("Quick Fix Auto", 34.06, -118.24, "available", "+1-555-0102", "engine,electrical"),
+            ("Roadside Repairs", 34.04, -118.26, "available", "+1-555-0103", "general"),
+        ]
+        for name, lat, lng, avail, contact, skills in mock_mechanics:
+            self.connection.execute(
+                """INSERT INTO mechanics (name, latitude, longitude, availability, contact, skills)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (name, lat, lng, avail, contact, skills),
+            )
+        self.connection.commit()
+
+    def get_mechanics_by_vicinity(
+        self,
+        user_lat: float | None,
+        user_lng: float | None,
+        radius_mi: float = 25.0,
+        limit: int = 10,
+    ) -> list[dict]:
+        """
+        Return available mechanics within radius of user location.
+        Uses Haversine formula for distance (SQLite has no native geo).
+        If user_lat/lng is None, returns all available mechanics sorted by id.
+        """
+        import math
+
+        try:
+            cursor = self.connection.execute(
+                "SELECT id, name, latitude, longitude, availability FROM mechanics WHERE availability = 'available'"
+            )
+            rows = cursor.fetchall()
+        except sqlite3.OperationalError:
+            return []
+
+        def haversine_mi(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+            R = 3959  # Earth radius in miles
+            phi1 = math.radians(lat1)
+            phi2 = math.radians(lat2)
+            dphi = math.radians(lat2 - lat1)
+            dlam = math.radians(lon2 - lon1)
+            a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            return R * c
+
+        out = []
+        for row in rows:
+            m_lat = row["latitude"]
+            m_lng = row["longitude"]
+            if m_lat is None or m_lng is None:
+                distance_mi = 999.0
+            elif user_lat is not None and user_lng is not None:
+                distance_mi = haversine_mi(user_lat, user_lng, m_lat, m_lng)
+                if distance_mi > radius_mi:
+                    continue
+            else:
+                distance_mi = 999.0
+
+            out.append({
+                "id": row["id"],
+                "name": row["name"],
+                "distance_mi": round(distance_mi, 1),
+                "availability": row["availability"] or "available",
+            })
+
+        out.sort(key=lambda m: m["distance_mi"])
+        return out[:limit]
 
     def get_failure_modes(self) -> list[dict]:
         """Return all failure modes as list of dicts (for pattern engine)."""

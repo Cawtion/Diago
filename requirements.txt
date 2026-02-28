@@ -35,6 +35,10 @@ llama-cpp-python
 # anthropic
 # tavily-python
 
+# Dispatch flow: LangGraph multi-agent flow (diagnostics -> parts -> mechanic)
+langgraph>=0.2.0
+langchain-core>=0.3.0
+
 # Repair guides (crawler + cloud DB): for scripts and when REPAIR_GUIDES_DB_URL is set
 beautifulsoup4
 psycopg2-binary

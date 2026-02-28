@@ -149,15 +149,20 @@ class AppSettings(BaseSettings):
 
     # Stripe
     stripe_secret_key: str = Field(default="", alias="STRIPE_SECRET_KEY")
+    stripe_publishable_key: str = Field(default="", alias="STRIPE_PUBLISHABLE_KEY")
     stripe_webhook_secret: str = Field(default="", alias="STRIPE_WEBHOOK_SECRET")
     stripe_pro_price_id: str = Field(default="", alias="DIAGO_STRIPE_PRO_PRICE_ID")
     stripe_premium_price_id: str = Field(default="", alias="DIAGO_STRIPE_PREMIUM_PRICE_ID")
+    stripe_part_price_cents: int = Field(default=4999, alias="DIAGO_STRIPE_PART_PRICE_CENTS")  # $49.99 default
 
     # External APIs (optional)
     car_api_key: str = Field(default="", alias="CAR_API_KEY")  # Car API (carapi.app) for OBD code fallback
 
     # Repair guides (cloud PostgreSQL); empty = no repair guide DB
     repair_guides_db_url: str = Field(default="", alias="REPAIR_GUIDES_DB_URL")
+
+    # Developer bypass: skip diagnosis rate limit (local dev only; do not enable in production)
+    disable_diagnosis_rate_limit: bool = Field(default=False, alias="DIAGO_DISABLE_RATE_LIMIT")
 
     @property
     def project_root(self) -> Path:

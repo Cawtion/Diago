@@ -32,6 +32,7 @@ export function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const isHome = location.pathname === "/";
   const isDiagnose = location.pathname === "/diagnose";
+  const isFindMechanic = location.pathname === "/find-mechanic";
   const session = useAuthStore((s) => s.session);
   const { data: subscription } = useQuery({
     queryKey: ["subscription", session?.access_token],
@@ -83,7 +84,7 @@ export function Header() {
             <span className="hidden sm:inline">Pricing</span>
           </Button>
         </Link>
-        {isDiagnose && (
+        {(isDiagnose || isFindMechanic) && (
           <Link to="/">
             <Button variant="ghost" size="sm">
               <Home size={14} />

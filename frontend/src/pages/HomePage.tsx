@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Activity, Car, History, Stethoscope } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Activity, Car, Stethoscope } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { Select } from "@/components/ui/Select";
 import { Header } from "@/components/layout/Header";
 import { StatusBar } from "@/components/layout/StatusBar";
 import { PersonaSelector } from "@/components/onboarding/PersonaSelector";
 import { usePersona } from "@/contexts/PersonaContext";
-import { listSessions, getVehicleYears, getVehicleMakes, getVehicleModels, saveSelectedVehicle } from "@/lib/api";
-import { formatTimestamp, formatDuration } from "@/lib/utils";
+import { getVehicleYears, getVehicleMakes, getVehicleModels, saveSelectedVehicle } from "@/lib/api";
 import { useAppStore } from "@/stores/appStore";
-import type { Session } from "@/types";
 
 const YEAR_PLACEHOLDER = "Year";
 const MAKE_PLACEHOLDER = "Make";
@@ -27,10 +24,6 @@ export function HomePage() {
   const [modelId, setModelId] = useState<string>("");
   const [trim, setTrim] = useState<string>("");
 
-  const sessions = useQuery({
-    queryKey: ["sessions"],
-    queryFn: () => listSessions(5),
-  });
   const yearsQuery = useQuery({
     queryKey: ["vehicle", "years"],
     queryFn: () => getVehicleYears(),
@@ -156,6 +149,12 @@ export function HomePage() {
               <Stethoscope size={20} />
               Start diagnosis
             </Button>
+            <p className="text-sm text-subtext text-center">
+              Already know what&apos;s wrong?{" "}
+              <Link to="/find-mechanic" className="text-primary hover:underline">
+                Find a mechanic
+              </Link>
+            </p>
             <details className="group max-w-xl mx-auto">
               <summary className="text-sm text-subtext cursor-pointer list-none py-2 text-center hover:text-text transition-colors">
                 Add vehicle (optional)
@@ -209,51 +208,6 @@ export function HomePage() {
               </Button>
             </details>
           </section>
-
-          {/* Recent sessions – lighter */}
-          <SectionCard
-            variant="compact"
-            title={
-              <span className="flex items-center gap-2 text-subtext">
-                <History size={14} />
-                Recent sessions
-              </span>
-            }
-          >
-            {sessions.isLoading ? (
-              <p className="text-sm text-subtext">Loading…</p>
-            ) : !sessions.data?.length ? (
-              <p className="text-sm text-subtext">
-                No sessions yet. Run a diagnosis to see history.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {sessions.data.map((session: Session) => (
-                  <li
-                    key={session.id}
-                    className="flex items-center justify-between gap-3 py-2 border-b border-surface1 last:border-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm text-text truncate">
-                        {formatTimestamp(session.timestamp)}
-                      </p>
-                      <p className="text-xs text-overlay0">
-                        {formatDuration(session.duration_seconds)}
-                        {session.user_codes && ` · ${session.user_codes}`}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate("/diagnose")}
-                    >
-                      Open
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
         </div>
       </main>
       <StatusBar />

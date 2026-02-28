@@ -65,6 +65,9 @@ def check_diagnosis_rate_limit(
 
     Raises HTTPException 429 if over limit.
     """
+    from core.config import get_settings
+    if get_settings().disable_diagnosis_rate_limit:
+        return  # developer bypass
     tier = user.tier if user else UserTier.FREE
     limit = TIER_LIMITS[tier]
     key = user.user_id if user else f"anon:{client_ip}"

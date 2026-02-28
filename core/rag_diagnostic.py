@@ -41,24 +41,32 @@ class RAGChunk:
     source: str = "ase_curated"
 
 
+# Minimum word-overlap score for a chunk to be considered relevant.
+# Avoids attributing sources when only one common word matches (e.g. "the", "vehicle").
+_MIN_RELEVANCE_SCORE = 2
+
+
 def retrieve(query: str, context: dict | None, k: int = 5) -> list[RAGChunk]:
     """
     Return up to k relevant chunks for the user query and context.
     Uses simple keyword overlap for now; can be replaced with embedding similarity.
+    Only returns chunks with score >= _MIN_RELEVANCE_SCORE so source attribution
+    reflects actual relevance; avoids misleading "Based on: all 5" when few/none apply.
     """
-    if not query and not context:
-        return [RAGChunk(title=c["title"], body=c["body"]) for c in ASE_CURATED_CHUNKS[:k]]
     combined = (query or "") + " " + " ".join(
         str(v) for v in (context or {}).values() if v
     )
-    combined_lower = combined.lower()
+    combined_stripped = (combined or "").strip()
+    if not combined_stripped:
+        return []  # No query/context: don't attribute any sources
+    combined_lower = combined_stripped.lower()
     scored = []
     for c in ASE_CURATED_CHUNKS:
         text = (c["title"] + " " + c["body"]).lower()
         score = sum(1 for w in combined_lower.split() if len(w) > 2 and w in text)
         scored.append((score, RAGChunk(title=c["title"], body=c["body"])))
     scored.sort(key=lambda x: -x[0])
-    return [chunk for _, chunk in scored[:k]]
+    return [chunk for score, chunk in scored[:k] if score >= _MIN_RELEVANCE_SCORE]
 
 
 def build_rag_prompt(
