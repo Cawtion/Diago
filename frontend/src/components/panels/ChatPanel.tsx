@@ -29,6 +29,7 @@ export function ChatPanel() {
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [lastSources, setLastSources] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -70,6 +71,7 @@ export function ChatPanel() {
         };
 
         const res = await postChat(messages, context);
+        setLastSources(res.sources ?? []);
         addChatMessage("assistant", res.content || "No response.");
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Request failed";
@@ -103,11 +105,11 @@ export function ChatPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-surface1">
         <div className="flex items-center gap-2">
-          <Bot size={18} className="text-primary" />
+          <Bot size={18} className="text-[var(--color-secondary)]" />
           <div>
             <span className="text-sm font-semibold text-text">DiagBot</span>
             <span className="text-[10px] text-overlay0 ml-2">
-              Local · No credits
+              Your diagnostic buddy & pro mentor
             </span>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function ChatPanel() {
             className={cn(
               "text-xs px-2.5 py-1 rounded-full border transition-colors cursor-pointer",
               chatMode === "agent"
-                ? "border-primary text-primary bg-primary/10"
+                ? "border-[var(--color-secondary)] text-[var(--color-secondary)] bg-[var(--color-secondary)]/10"
                 : "border-surface1 text-subtext"
             )}
           >
@@ -150,7 +152,7 @@ export function ChatPanel() {
           <div className="text-center py-8">
             <Bot size={32} className="text-surface2 mx-auto mb-2" />
             <p className="text-sm text-subtext">
-              Ask DiagBot about your vehicle's symptoms
+              Ask me anything—we’ll figure it out together
             </p>
           </div>
         )}
@@ -193,6 +195,13 @@ export function ChatPanel() {
           </div>
         ))}
 
+        {/* ASE sources from last response */}
+        {lastSources.length > 0 && !isTyping && (
+          <p className="text-[10px] text-overlay0 px-4 pt-1">
+            Based on: {lastSources.join("; ")}
+          </p>
+        )}
+
         {/* Typing indicator */}
         {isTyping && (
           <div className="flex justify-start">
@@ -231,7 +240,7 @@ export function ChatPanel() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask DiagBot..."
+          placeholder="Ask your diagnostic buddy..."
           rows={1}
           className="flex-1 bg-surface0 text-text border border-surface1 rounded-lg px-3 py-2 text-sm resize-none max-h-20 placeholder:text-overlay0 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
         />
