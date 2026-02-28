@@ -383,6 +383,38 @@ export async function cancelSubscription(accessToken: string): Promise<{ message
   });
 }
 
+/* ─── Repair guides (CarDiagn + charm.li, no separate API) ─── */
+export interface RepairGuideItem {
+  id: number;
+  source: string;
+  source_url: string;
+  title: string;
+  summary?: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  year_min?: number;
+  year_max?: number;
+}
+
+export async function getRepairGuidesForDiagnosis(params: {
+  q?: string;
+  make?: string;
+  model?: string;
+  year?: number;
+  limit?: number;
+}): Promise<RepairGuideItem[]> {
+  const search = new URLSearchParams();
+  if (params.q) search.set("q", params.q);
+  if (params.make) search.set("make", params.make);
+  if (params.model) search.set("model", params.model);
+  if (params.year != null) search.set("year", String(params.year));
+  if (params.limit != null) search.set("limit", String(params.limit));
+  const qs = search.toString();
+  return request<RepairGuideItem[]>(
+    `${BASE}/repair-guides/for-diagnosis${qs ? `?${qs}` : ""}`
+  );
+}
+
 /* ─── Chat (Ollama — local, no credits) ─── */
 export interface ChatMessagePayload {
   role: string;
@@ -399,6 +431,7 @@ export interface ChatContextPayload {
 export interface ChatResponsePayload {
   content: string;
   error?: string;
+  sources?: string[];
 }
 
 export async function postChat(

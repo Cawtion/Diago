@@ -83,6 +83,7 @@ def create_app() -> FastAPI:
     from api.routes.chat import router as chat_router
     from api.routes.repairs import router as repairs_router
     from api.routes.analytics import router as analytics_router
+    from api.routes.repair_guides import router as repair_guides_router
 
     # Register route modules
     app.include_router(diagnosis_router, prefix="/api/v1/diagnosis", tags=["Diagnosis"])
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router, prefix="/api/v1/chat", tags=["Chat"])
     app.include_router(repairs_router, prefix="/api/v1/repairs", tags=["Repairs"])
     app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["Analytics"])
+    app.include_router(repair_guides_router, prefix="/api/v1/repair-guides", tags=["Repair Guides"])
 
     @app.get("/health")
     async def health_check():

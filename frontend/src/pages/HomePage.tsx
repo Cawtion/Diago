@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, Car, History, Stethoscope } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -69,6 +69,14 @@ export function HomePage() {
 
   const selectedMake = makeOptions.find((o) => o.value === makeId);
   const selectedModel = modelOptions.find((o) => o.value === modelId);
+
+  /* Reset model when options change so we never show a stale model from a different make/year */
+  useEffect(() => {
+    const validValues = new Set(modelOptions.map((o) => o.value));
+    if (modelId && !validValues.has(modelId)) {
+      setModelId("");
+    }
+  }, [modelOptions, modelId]);
 
   const onStartDiagnosis = async () => {
     const makeName = selectedMake?.label ?? "";
@@ -172,6 +180,7 @@ export function HomePage() {
                 }}
               />
               <Select
+                key={`model-${makeId}-${year}`}
                 label="Model"
                 options={modelOptions}
                 value={modelId}
@@ -190,9 +199,9 @@ export function HomePage() {
               </div>
             </div>
               <Button
-                variant="ghost"
+                variant="orange"
                 size="sm"
-                className="w-full mt-2 text-subtext"
+                className="w-full mt-2"
                 onClick={() => navigate("/diagnose", { state: { focus: "vehicle" } })}
               >
                 <Car size={14} />

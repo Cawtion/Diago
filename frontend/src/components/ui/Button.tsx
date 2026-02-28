@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "default" | "primary" | "danger" | "ghost" | "green" | "red";
+type Variant = "default" | "primary" | "secondary" | "danger" | "ghost" | "green" | "red" | "orange";
 type Size = "sm" | "md" | "lg" | "xl";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,6 +14,8 @@ const variantStyles: Record<Variant, string> = {
     "bg-surface0 text-text hover:bg-surface1 border border-surface1",
   primary:
     "bg-gradient-primary text-white hover:opacity-90 font-semibold",
+  secondary:
+    "bg-gradient-secondary text-white hover:opacity-90 font-semibold",
   danger:
     "bg-red text-crust hover:opacity-90 font-semibold",
   ghost:
@@ -22,6 +24,8 @@ const variantStyles: Record<Variant, string> = {
     "bg-green text-crust hover:opacity-90 font-semibold",
   red:
     "bg-red text-crust hover:opacity-90 font-semibold",
+  orange:
+    "bg-[var(--color-secondary)] text-white hover:opacity-90 font-semibold",
 };
 
 const sizeStyles: Record<Size, string> = {

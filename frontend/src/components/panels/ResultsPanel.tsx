@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Gauge,
   Activity,
   FileEdit,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +20,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { usePersona } from "@/contexts/PersonaContext";
 import { confidenceColor, cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
-import { confirmTest, createRepair } from "@/lib/api";
+import { confirmTest, createRepair, getRepairGuidesForDiagnosis } from "@/lib/api";
 
 /** Map tool names to Lucide icons for confirm tests */
 const TOOL_ICONS: Record<string, LucideIcon> = {
@@ -114,6 +116,25 @@ export function ResultsPanel() {
 
   const isEnterprise = personaTier === "enterprise";
 
+  const repairGuides = useQuery({
+    queryKey: [
+      "repair-guides",
+      vehicleSelection.makeName,
+      vehicleSelection.modelName,
+      vehicleSelection.year,
+      diagnosis.top_class_display,
+    ],
+    queryFn: () =>
+      getRepairGuidesForDiagnosis({
+        make: vehicleSelection.makeName || undefined,
+        model: vehicleSelection.modelName || undefined,
+        year: vehicleSelection.year ?? undefined,
+        q: diagnosis.top_class_display || diagnosis.report_text?.slice(0, 100),
+        limit: 5,
+      }),
+    enabled: Boolean(diagnosis),
+  });
+
   return (
     <div
       className={cn(
@@ -165,6 +186,36 @@ export function ResultsPanel() {
           ))}
         </ul>
       </div>
+
+      {/* Repair guidance (CarDiagn + charm.li) */}
+      {repairGuides.data && repairGuides.data.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold text-text flex items-center gap-2">
+            <BookOpen size={18} className="text-[var(--color-secondary)]" />
+            Repair guidance
+          </h3>
+          <ul className="space-y-2">
+            {repairGuides.data.map((guide) => (
+              <li key={guide.id}>
+                <a
+                  href={guide.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1.5"
+                >
+                  {guide.title}
+                  {guide.source && (
+                    <span className="text-[10px] text-overlay0">({guide.source})</span>
+                  )}
+                </a>
+                {guide.summary && (
+                  <p className="text-xs text-subtext mt-0.5 pl-5">{guide.summary}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Ranked failure modes (master-tech pattern layer) */}
       {diagnosis.ranked_failure_modes && diagnosis.ranked_failure_modes.length > 0 && (

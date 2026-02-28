@@ -13,7 +13,7 @@ export function SectionCard({ title, children, className, variant = "relaxed" }:
   return (
     <section
       className={cn(
-        "rounded-xl border border-surface1/80 card-shadow",
+        "rounded-xl border border-surface1/80 card-shadow dashboard-card",
         variant === "relaxed" && "bg-mantle/80 p-5",
         variant === "compact" && "bg-mantle/60 p-3",
         className

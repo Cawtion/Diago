@@ -34,3 +34,7 @@ llama-cpp-python
 # openai
 # anthropic
 # tavily-python
+
+# Repair guides (crawler + cloud DB): for scripts and when REPAIR_GUIDES_DB_URL is set
+beautifulsoup4
+psycopg2-binary

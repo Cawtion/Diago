@@ -2,7 +2,7 @@
 
 /* ─── Design System: Unified tokens for light + dark themes ─── */
 @theme {
-  /* Semantic tokens – values set per data-theme below */
+  /* Semantic tokens – grey, white, burgundy, orange (rotating dashboard) */
   --color-base: var(--ds-base);
   --color-mantle: var(--ds-mantle);
   --color-crust: var(--ds-crust);
@@ -15,62 +15,63 @@
   --color-subtext: var(--ds-subtext);
   --color-primary: var(--ds-primary);
   --color-secondary: var(--ds-secondary);
+  --color-accent-orange: var(--ds-accent-orange);
   --color-green: var(--ds-green);
   --color-yellow: var(--ds-yellow);
   --color-red: var(--ds-red);
-  /* Card styling – soft, minimal (mech.ai-style) */
+  /* Card styling */
   --radius-card: 12px;
   --radius-card-tight: 10px;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-card-dark: 0 1px 3px rgba(0, 0, 0, 0.2);
-  /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  /* Spacing – more breath */
   --space-section: 1.5rem;
   --space-block: 1rem;
 }
 
-/* ─── Light theme (default for One-Time) ─── */
+/* ─── Light theme: grey, white, burgundy, orange ─── */
 :root,
 [data-theme="light"] {
-  --ds-base: #F9FAFB;
+  --ds-base: #F5F5F5;
   --ds-mantle: #FFFFFF;
-  --ds-crust: #F3F4F6;
+  --ds-crust: #EEEEEE;
   --ds-surface0: #FFFFFF;
-  --ds-surface1: #F3F4F6;
-  --ds-surface2: #E5E7EB;
-  --ds-overlay0: #9CA3AF;
-  --ds-overlay1: #6B7280;
-  --ds-text: #111827;
-  --ds-subtext: #4B5563;
-  --ds-primary: #3B82F6;
-  --ds-secondary: #0EA5E9;
-  --ds-green: #10B981;
-  --ds-yellow: #F59E0B;
-  --ds-red: #EF4444;
-  --ds-gradient-primary: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-  --ds-gradient-secondary: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%);
+  --ds-surface1: #E8E8E8;
+  --ds-surface2: #9E9E9E;
+  --ds-overlay0: #757575;
+  --ds-overlay1: #616161;
+  --ds-text: #212121;
+  --ds-subtext: #424242;
+  --ds-primary: #722F37;
+  --ds-secondary: #E65100;
+  --ds-accent-orange: #E65100;
+  --ds-green: #2E7D32;
+  --ds-yellow: #F57C00;
+  --ds-red: #C62828;
+  --ds-gradient-primary: linear-gradient(135deg, #5C252B 0%, #722F37 100%);
+  --ds-gradient-secondary: linear-gradient(135deg, #BF360C 0%, #E65100 100%);
 }
 
-/* ─── Dark theme (default for Enterprise) ─── */
+/* ─── Dark theme: grey, white, burgundy, orange ─── */
 [data-theme="dark"] {
-  --ds-base: #111827;
-  --ds-mantle: #1F2937;
-  --ds-crust: #0F172A;
-  --ds-surface0: #1F2937;
-  --ds-surface1: #374151;
-  --ds-surface2: #4B5563;
-  --ds-overlay0: #6B7280;
-  --ds-overlay1: #9CA3AF;
-  --ds-text: #F9FAFB;
-  --ds-subtext: #D1D5DB;
-  --ds-primary: #3B82F6;
-  --ds-secondary: #22D3EE;
-  --ds-green: #34D399;
-  --ds-yellow: #FBBF24;
-  --ds-red: #F87171;
-  --ds-gradient-primary: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%);
-  --ds-gradient-secondary: linear-gradient(135deg, #0EA5E9 0%, #22D3EE 100%);
+  --ds-base: #1A1A1A;
+  --ds-mantle: #2D2D2D;
+  --ds-crust: #121212;
+  --ds-surface0: #383838;
+  --ds-surface1: #424242;
+  --ds-surface2: #9E9E9E;
+  --ds-overlay0: #757575;
+  --ds-overlay1: #BDBDBD;
+  --ds-text: #FAFAFA;
+  --ds-subtext: #E0E0E0;
+  --ds-primary: #9E4A52;
+  --ds-secondary: #FF8A50;
+  --ds-accent-orange: #FF8A50;
+  --ds-green: #66BB6A;
+  --ds-yellow: #FFB74D;
+  --ds-red: #EF5350;
+  --ds-gradient-primary: linear-gradient(135deg, #722F37 0%, #9E4A52 100%);
+  --ds-gradient-secondary: linear-gradient(135deg, #E65100 0%, #FF8A50 100%);
 }
 
 /* ─── Base Styles ─── */
@@ -148,3 +149,24 @@ body,
 [data-theme="dark"] .card-shadow {
   box-shadow: var(--shadow-card-dark);
 }
+
+/* ─── Rotating dashboard: staggered card entrance ─── */
+@keyframes dashboard-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.dashboard-card {
+  animation: dashboard-card-enter 0.35s ease-out forwards;
+}
+.dashboard-card:nth-child(1) { animation-delay: 0ms; }
+.dashboard-card:nth-child(2) { animation-delay: 50ms; }
+.dashboard-card:nth-child(3) { animation-delay: 100ms; }
+.dashboard-card:nth-child(4) { animation-delay: 150ms; }
+.dashboard-card:nth-child(5) { animation-delay: 200ms; }
+.dashboard-card:nth-child(n+6) { animation-delay: 250ms; }

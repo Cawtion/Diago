@@ -156,6 +156,9 @@ class AppSettings(BaseSettings):
     # External APIs (optional)
     car_api_key: str = Field(default="", alias="CAR_API_KEY")  # Car API (carapi.app) for OBD code fallback
 
+    # Repair guides (cloud PostgreSQL); empty = no repair guide DB
+    repair_guides_db_url: str = Field(default="", alias="REPAIR_GUIDES_DB_URL")
+
     @property
     def project_root(self) -> Path:
         """Return the project root directory."""
