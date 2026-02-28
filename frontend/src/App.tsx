@@ -5,6 +5,7 @@ import { PersonaProvider } from "@/contexts/PersonaContext";
 import { PersistentDiagBot } from "@/components/layout/PersistentDiagBot";
 import { HomePage } from "@/pages/HomePage";
 import { DiagnoseView } from "@/pages/DiagnoseView";
+import { FindMechanicView } from "@/pages/FindMechanicView";
 import { PricingPage } from "@/pages/PricingPage";
 
 const queryClient = new QueryClient({
@@ -20,6 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/diagnose" element={<DiagnoseView />} />
+          <Route path="/find-mechanic" element={<FindMechanicView />} />
           <Route path="/pricing" element={<PricingPage />} />
         </Routes>
         <PersistentDiagBot />

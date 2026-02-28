@@ -6,6 +6,7 @@
 import type {
   BehavioralContext,
   DiagnosisResponse,
+  DispatchResponse,
   RankedFailureMode,
   SubscriptionStatus,
   AudioInfo,
@@ -442,5 +443,83 @@ export async function postChat(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, context }),
+  });
+}
+
+/* ─── Dispatch parts order (Stripe payment) ─── */
+export async function createPartsOrder(payload: {
+  thread_id: string;
+  part: { name: string };
+  retailer_id: string;
+  retailer_name: string;
+  retailer_store_id?: string;
+  user_id?: string;
+}): Promise<{
+  client_secret: string | null;
+  payment_intent_id: string;
+  amount_cents: number;
+  order_id?: number;
+  stub: boolean;
+}> {
+  return request(`${BASE}/dispatch/parts-order/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getPaymentsConfig(): Promise<{ stripe_publishable_key: string }> {
+  return request(`${BASE}/payments/config`);
+}
+
+/* ─── Geocoding (address -> lat/lng for dispatch) ─── */
+export async function geocodeAddress(address: string): Promise<{ latitude: number; longitude: number }> {
+  const params = new URLSearchParams({ address });
+  return request<{ latitude: number; longitude: number }>(`${BASE}/geocode?${params}`);
+}
+
+/* ─── Dispatch (diagnostics -> parts -> mechanic) ─── */
+export async function dispatchRun(payload: {
+  symptoms: string;
+  codes: string[];
+  behavioral_context?: Record<string, unknown>;
+  user_id?: string;
+}): Promise<DispatchResponse> {
+  return request<DispatchResponse>(`${BASE}/dispatch/run`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Direct to mechanic — skip diagnosis for users who already know what's wrong. */
+export async function dispatchRunDirect(payload: {
+  part_info: string;
+  user_latitude?: number;
+  user_longitude?: number;
+  user_address?: string;
+  user_id?: string;
+}): Promise<DispatchResponse> {
+  return request<DispatchResponse>(`${BASE}/dispatch/run-direct`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function dispatchContinue(payload: {
+  thread_id: string;
+  action: "get_parts" | "part_selected" | "stock_confirmed" | "mechanic_selected" | "mechanic_responded";
+  selected_part?: Record<string, unknown>;
+  selected_mechanic_id?: number;
+  mechanic_accepted?: boolean;
+  user_latitude?: number;
+  user_longitude?: number;
+  user_address?: string;
+}): Promise<DispatchResponse> {
+  return request<DispatchResponse>(`${BASE}/dispatch/continue`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
 }
