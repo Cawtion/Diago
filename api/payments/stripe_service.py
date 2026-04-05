@@ -17,16 +17,18 @@ from api.middleware.auth import UserTier
 logger = logging.getLogger(__name__)
 
 # ─── Tier → Stripe Price Mapping ───
-# Price IDs are loaded from config (DIAGO_STRIPE_PRO_PRICE_ID, DIAGO_STRIPE_PREMIUM_PRICE_ID).
+# Price IDs are loaded from config (DIAGO_STRIPE_DIY_PRICE_ID, DIAGO_STRIPE_PRO_MECHANIC_PRICE_ID, DIAGO_STRIPE_SHOP_PRICE_ID).
 
 
 def _get_tier_price_id(tier: UserTier) -> str:
     """Return the Stripe Price ID for the given tier from config."""
     settings = get_settings()
-    if tier == UserTier.PRO:
-        return settings.stripe_pro_price_id or ""
-    if tier == UserTier.PREMIUM:
-        return settings.stripe_premium_price_id or ""
+    if tier == UserTier.DIY:
+        return settings.stripe_diy_price_id or ""
+    if tier == UserTier.PRO_MECHANIC:
+        return settings.stripe_pro_mechanic_price_id or ""
+    if tier == UserTier.SHOP:
+        return settings.stripe_shop_price_id or ""
     return ""
 
 

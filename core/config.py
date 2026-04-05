@@ -155,8 +155,9 @@ class AppSettings(BaseSettings):
     stripe_secret_key: str = Field(default="", alias="STRIPE_SECRET_KEY")
     stripe_publishable_key: str = Field(default="", alias="STRIPE_PUBLISHABLE_KEY")
     stripe_webhook_secret: str = Field(default="", alias="STRIPE_WEBHOOK_SECRET")
-    stripe_pro_price_id: str = Field(default="", alias="DIAGO_STRIPE_PRO_PRICE_ID")
-    stripe_premium_price_id: str = Field(default="", alias="DIAGO_STRIPE_PREMIUM_PRICE_ID")
+    stripe_diy_price_id: str = Field(default="", alias="DIAGO_STRIPE_DIY_PRICE_ID")
+    stripe_pro_mechanic_price_id: str = Field(default="", alias="DIAGO_STRIPE_PRO_MECHANIC_PRICE_ID")
+    stripe_shop_price_id: str = Field(default="", alias="DIAGO_STRIPE_SHOP_PRICE_ID")
     stripe_part_price_cents: int = Field(default=4999, alias="DIAGO_STRIPE_PART_PRICE_CENTS")  # $49.99 default
 
     # External APIs (optional)

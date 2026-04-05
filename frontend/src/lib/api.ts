@@ -388,7 +388,7 @@ export async function getSubscriptionStatus(
 }
 
 export async function createCheckout(
-  payload: { tier: "pro" | "premium"; success_url: string; cancel_url: string },
+  payload: { tier: "diy" | "pro_mechanic" | "shop"; success_url: string; cancel_url: string },
   accessToken: string
 ): Promise<{ checkout_url: string }> {
   return request<{ checkout_url: string }>(`${BASE}/payments/checkout`, {
