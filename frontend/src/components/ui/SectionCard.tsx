@@ -13,14 +13,14 @@ export function SectionCard({ title, children, className, variant = "relaxed" }:
   return (
     <section
       className={cn(
-        "rounded-xl border border-surface1/80 card-shadow dashboard-card",
-        variant === "relaxed" && "bg-mantle/80 p-5",
-        variant === "compact" && "bg-mantle/60 p-3",
+        "rounded-xl card-shadow dashboard-card",
+        variant === "relaxed" && "bg-surface0 p-5",
+        variant === "compact" && "bg-surface0/70 p-3",
         className
       )}
     >
       {title != null && (
-        <h2 className="text-sm font-medium text-subtext mb-3 flex items-center gap-2 tracking-tight">
+        <h2 className="text-xs font-medium text-subtext mb-3 flex items-center gap-2 tracking-widest uppercase">
           {title}
         </h2>
       )}

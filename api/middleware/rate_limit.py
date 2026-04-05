@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 # ─── Rate Limit Configuration ───
 # Product: diagnoses per calendar month per tier.
-# Stripe price IDs: DIAGO_STRIPE_PRO_PRICE_ID, DIAGO_STRIPE_PREMIUM_PRICE_ID (core/config).
+# Stripe price IDs: DIAGO_STRIPE_DIY_PRICE_ID, DIAGO_STRIPE_PRO_MECHANIC_PRICE_ID, DIAGO_STRIPE_SHOP_PRICE_ID (core/config).
 
 TIER_LIMITS = {
     UserTier.FREE: 3,
-    UserTier.PRO: 500,        # high cap
-    UserTier.PREMIUM: 10000,  # effectively unlimited
+    UserTier.DIY: 50,
+    UserTier.PRO_MECHANIC: 500,
+    UserTier.SHOP: 10000,  # effectively unlimited
 }
 
 # In-memory fallback when DB not available (e.g. tests)
