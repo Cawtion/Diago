@@ -39,6 +39,7 @@ export function RecordPanel() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const startTimeRef = useRef<number>(0);
   const [elapsed, setElapsed] = useState(0);
   const [statusText, setStatusText] = useState("No audio loaded");
   const [micError, setMicError] = useState<string | null>(null);
@@ -69,7 +70,8 @@ export function RecordPanel() {
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob, `recording_${Date.now()}.webm`);
-        setStatusText(`Recording: ${formatDuration(elapsed)}`);
+        const finalSecs = (Date.now() - startTimeRef.current) / 1000;
+        setStatusText(`Recorded: ${formatDuration(finalSecs)}`);
         stream.getTracks().forEach((t) => t.stop());
       };
 
@@ -77,10 +79,10 @@ export function RecordPanel() {
       mediaRecorderRef.current = mr;
       setIsRecording(true);
       setElapsed(0);
+      startTimeRef.current = Date.now();
 
-      const startTime = Date.now();
       timerRef.current = setInterval(() => {
-        const secs = (Date.now() - startTime) / 1000;
+        const secs = (Date.now() - startTimeRef.current) / 1000;
         setElapsed(secs);
         setStatusText(`Recording: ${formatDuration(secs)}`);
 
@@ -92,7 +94,7 @@ export function RecordPanel() {
       setMicError("Microphone access denied. Check browser permissions.");
       setStatusText("Microphone access denied");
     }
-  }, [recordDuration, elapsed, setAudioBlob, setIsRecording, stopRecording]);
+  }, [recordDuration, setAudioBlob, setIsRecording, stopRecording]);
 
   /* Import file */
   const handleImport = useCallback(() => {

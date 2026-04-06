@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getJob } from "@/lib/api";
+import { getApiBase } from "@/lib/env";
 
 export interface JobTrackingState {
   job: Awaited<ReturnType<typeof getJob>> | null;
@@ -40,8 +41,10 @@ export function useJobTracking(jobId: number | null): JobTrackingState {
 
   useEffect(() => {
     if (!jobId) return;
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/api/v1/tracking/${jobId}`;
+    const apiBase = getApiBase();
+    const wsUrl = apiBase
+      ? `${apiBase.replace(/^http/, "ws")}/api/v1/tracking/${jobId}`
+      : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/v1/tracking/${jobId}`;
     const ws = new WebSocket(wsUrl);
     ws.onmessage = (ev) => {
       try {

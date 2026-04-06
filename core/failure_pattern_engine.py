@@ -44,7 +44,7 @@ def get_fuel_trim_conditions(fuel_trims: FuelTrimIntake, environment: Environmen
         conditions.append("both_banks_lean_idle")
     if getattr(environment, "under_load", False) and combined >= 15:
         conditions.append("lean_under_load_only")
-    if stft_val is not None and stft_val <= -10 and getattr(environment, "at_idle", False):
+    if stft_val <= -10 and getattr(environment, "at_idle", False):
         conditions.append("rich_at_idle")
 
     return conditions

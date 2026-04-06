@@ -68,7 +68,7 @@ export function PersistentDiagBot() {
           </button>
         </div>
         <div className="flex-1 min-h-0 flex flex-col">
-          <ChatPanel />
+          {open && <ChatPanel />}
         </div>
       </div>
     </>
